@@ -14,12 +14,12 @@ lines = sc.textFile("file:///SparkCourse/1800.csv")
 parsedLines = lines.map(parseLine)
 # filter() removes data from the RDD
 # Here, we want to filter out entries that don't have "TMAX" in the first item of a list of data
-minTemps = parsedLines.filter(lambda x: "TMAX" in x[1])
+maxTemps = parsedLines.filter(lambda x: "TMAX" in x[1])
 # create (stationID, temperature) key/value pairs
-stationTemps = minTemps.map(lambda x: (x[0], x[2]))
+stationTemps = maxTemps.map(lambda x: (x[0], x[2]))
 # find minimum temperature by stationID
-minTemps = stationTemps.reduceByKey(lambda x, y: max(x,y))
-results = minTemps.collect()
+maxTemps = stationTemps.reduceByKey(lambda x, y: max(x,y))
+results = maxTemps.collect()
 
 for result in results:
     print(result[0] + "\t{:.2f}C".format(result[1]))
