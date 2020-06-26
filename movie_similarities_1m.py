@@ -5,7 +5,12 @@ from math import sqrt
 #To run on EMR successfully + output results for Star Wars:
 #aws s3 cp s3://sundog-spark/MovieSimilarities1M.py ./
 #aws s3 sp c3://sundog-spark/ml-1m/movies.dat ./
+
+# the default executor memory budget of 512MB is insuficcient for processing one million movie ratings.
+#   this is why we set up --executor-memory for 1 GB
+#   unfortunately, the only way to check it is by try-and-error
 #spark-submit --executor-memory 1g MovieSimilarities1M.py 260
+
 
 def loadMovieNames():
     movieNames = {}
