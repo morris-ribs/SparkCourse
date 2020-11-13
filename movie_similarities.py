@@ -56,7 +56,11 @@ ratings = data.map(lambda l: l.split()).map(lambda l: (int(l[0]), (int(l[1]), fl
 
 # Emit every movie rated together by the same user.
 # Self-join to find every combination.
-joinedRatings = ratings.join(ratings)
+ratingsPartitioned = ratings.partitionBy(100)
+joinedRatings = ratingsPartitioned.join(ratingsPartitioned)
+
+print("\ncount:")
+print(joinedRatings.count())
 
 # At this point our RDD consists of userID => ((movieID, rating), (movieID, rating))
 
@@ -91,7 +95,8 @@ if (len(sys.argv) > 1):
     filteredResults = moviePairSimilarities.filter(lambda pairSim: \
         (pairSim[0][0] == movieID or pairSim[0][1] == movieID) \
         and pairSim[1][0] > scoreThreshold and pairSim[1][1] > coOccurenceThreshold)
-
+    print(filteredResults is None)
+    print(filteredResults.count())
     # Sort by quality score.
     results = filteredResults.map(lambda pairSim: (pairSim[1], pairSim[0])).sortByKey(ascending = False).take(10)
 

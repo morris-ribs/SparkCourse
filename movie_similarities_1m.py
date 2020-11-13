@@ -14,18 +14,20 @@ from math import sqrt
 
 def loadMovieNames():
     movieNames = {}
-    with open("movies.dat") as f:
+    with open("ml-1m/movies.dat", encoding='ascii', errors='ignore') as f:
         for line in f:
             fields = line.split("::")
-            movieNames[int(fields[0])] = fields[1].decode('ascii', 'ignore')
+            movieNames[int(fields[0])] = fields[1]#.decode('ascii', 'ignore')
     return movieNames
 
-def makePairs((user, ratings)):
+def makePairs(userRatings):
+    ratings = userRatings[1]
     (movie1, rating1) = ratings[0]
     (movie2, rating2) = ratings[1]
     return ((movie1, movie2), (rating1, rating2))
 
-def filterDuplicates( (userID, ratings) ):
+def filterDuplicates(userRatings):
+    ratings = userRatings[1]
     (movie1, rating1) = ratings[0]
     (movie2, rating2) = ratings[1]
     return movie1 < movie2
@@ -55,7 +57,7 @@ sc = SparkContext(conf = conf)
 print("\nLoading movie names...")
 nameDict = loadMovieNames()
 
-data = sc.textFile("s3n://sundog-spark/ml-1m/ratings.dat")
+data = sc.textFile("file:///SparkCourse/ml-1m/ratings.dat")
 
 # Map ratings to key / value pairs: user ID => movie ID, rating
 ratings = data.map(lambda l: l.split("::")).map(lambda l: (int(l[0]), (int(l[1]), float(l[2]))))
@@ -95,12 +97,12 @@ if (len(sys.argv) > 1):
 
     # Filter for movies with this sim that are "good" as defined by
     # our quality thresholds above
-    filteredResults = moviePairSimilarities.filter(lambda((pair,sim)): \
-        (pair[0] == movieID or pair[1] == movieID) \
-        and sim[0] > scoreThreshold and sim[1] > coOccurenceThreshold)
+    filteredResults = moviePairSimilarities.filter(lambda pairSim: \
+        (pairSim[0][0] == movieID or pairSim[0][1] == movieID) \
+        and pairSim[1][0] > scoreThreshold and pairSim[1][1] > coOccurenceThreshold)
 
     # Sort by quality score.
-    results = filteredResults.map(lambda((pair,sim)): (sim, pair)).sortByKey(ascending = False).take(10)
+    results = filteredResults.map(lambda pairSim: (pairSim[1], pairSim[0])).sortByKey(ascending = False).take(10)
 
     print("Top 10 similar movies for " + nameDict[movieID])
     for result in results:
